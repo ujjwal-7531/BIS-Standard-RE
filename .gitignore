@@ -5,6 +5,7 @@ __pycache__/
 
 venv/
 .env
+.codex
 
 team_results.json
 *.tmp

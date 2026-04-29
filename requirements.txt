@@ -1,3 +1,4 @@
-# Inference uses only the Python standard library.
+streamlit>=1.35.0
+
 # Optional for preprocessing fallback if Poppler's pdftotext is unavailable:
 # pypdf>=6.0.0

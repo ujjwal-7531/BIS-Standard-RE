@@ -39,3 +39,12 @@ python inference.py \
 
 python eval_script.py --results /tmp/bis_public_results.json
 ```
+
+## Demo UI
+
+Install the UI dependency and run the Streamlit interface:
+
+```bash
+pip install -r requirements.txt
+streamlit run interface.py
+```
