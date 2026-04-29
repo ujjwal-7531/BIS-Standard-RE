@@ -1,4 +1,5 @@
 streamlit>=1.35.0
-
-# Optional for preprocessing fallback if Poppler's pdftotext is unavailable:
-# pypdf>=6.0.0
+pypdf
+sentence-transformers
+numpy
+torch --index-url https://download.pytorch.org/whl/cpu
