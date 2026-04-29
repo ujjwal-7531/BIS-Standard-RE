@@ -6,8 +6,10 @@ from pathlib import Path
 
 
 STANDARD_HEADER_RE = re.compile(
-    r"SUMMARY OF\s+\n*\s*"
-    r"(IS\s+\d+\s*(?:\(\s*PART\s*\d+\s*\))?\s*:\s*\d{4})",
+    r"SUMMARY OF\s*\n+\s*"
+    r"(IS\s*:?\s*\d+\s*"                          # IS [optional colon] NUMBER
+    r"(?:\(\s*PART\s*[\dIVXivx]+(?:[/\s][A-Z0-9 ]*)?\s*(?:AND\s*\d+)?\s*\))?\s*"  # optional (PART ...)
+    r"[:\-]\s*\d{4})",                             # colon or dash + year
     re.IGNORECASE,
 )
 
