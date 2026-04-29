@@ -11,7 +11,7 @@ python inference.py --input hidden_private_dataset.json --output team_results.js
 
 - `src/preprocess.py` extracts SP 21 summaries from `dataset.pdf` into
   `data/processed_data.json`.
-- `src/retrever.py` builds a local BM25-style lexical retriever with title,
+- `src/retriever.py` builds a local BM25-style lexical retriever with title,
   standard-number, and material-word boosts.
 - `src/pipeline.py` exposes the recommendation pipeline.
 - `inference.py` reads input JSON and writes the required output schema.
