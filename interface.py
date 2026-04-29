@@ -5,15 +5,6 @@ import streamlit as st
 from src.retriever import get_retriever
 
 
-EXAMPLE_QUERIES = [
-    "We manufacture 33 Grade Ordinary Portland Cement and need the applicable BIS standard.",
-    "Looking for the standard for precast concrete pipes for water mains and sewerage.",
-    "We produce hollow and solid lightweight concrete masonry blocks.",
-    "Which standard covers corrugated and semi-corrugated asbestos cement sheets for roofing?",
-    "We make calcined clay based Portland pozzolana cement.",
-]
-
-
 st.set_page_config(
     page_title="BIS Standards Recommendation Engine",
     page_icon="BIS",
@@ -84,13 +75,7 @@ with left:
     submitted = st.button("Recommend Standards", type="primary", use_container_width=True)
 
 with right:
-    selected_example = st.selectbox("Demo query", EXAMPLE_QUERIES)
-    use_example = st.button("Use Demo Query", use_container_width=True)
     st.metric("Indexed BIS standards", len(get_retriever().documents))
-
-if use_example:
-    query = selected_example
-    submitted = True
 
 if submitted:
     if not query.strip():
@@ -107,4 +92,4 @@ if submitted:
             render_result(rank, hit)
 else:
     st.subheader("Top Recommendations")
-    st.info("Enter a product description or choose a demo query.")
+    st.info("Enter a product description to get recommendations.")
