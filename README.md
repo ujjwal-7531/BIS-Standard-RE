@@ -1,104 +1,73 @@
 # 🏗️ BIS Standards Recommendation Engine
 
 **Problem:** MSEs spend weeks finding which BIS standards apply to their products.  
-**Solution:** AI system recommends relevant standards in <2 seconds.
+**Solution:** AI system recommends relevant standards in <2 seconds using Hybrid Search.
 
 ---
 
 ## 🎯 The Approach
 
-We use **Retrieval-Augmented Generation (RAG)** - a smart 3-step process:
+We use a sophisticated **Hybrid Retrieval** system that combines traditional keyword matching with modern AI understanding:
 
-1. **Query Understanding** → Expand user query with domain terms (e.g., "cement" → "ordinary portland cement, opc, 33 grade")
-2. **Smart Ranking** → Search indexed BIS standards using BM25 algorithm with material boosting
-3. **Optional Validation** → Use lightweight LLM (phi:2.7b) to filter non-building-related queries
+1. **Query Expansion** → Automatically adds technical synonyms (e.g., "fly ash" → "portland pozzolana cement part 1") to catch more matches.
+2. **Hybrid Ranking** (The "Secret Sauce"):
+   - **BM25 (40%)**: Precise keyword matching for standard IDs (like "IS 456") and specific material terms.
+   - **Semantic Embeddings (60%)**: AI-powered "meaning" matching using the `all-MiniLM-L6-v2` model. It understands that "high strength" and "durable" are related to certain cement grades.
+3. **Material Boosting** → Specific weights are given to standard titles and material keywords to prioritize the most relevant matches.
+4. **Optional Validation** → Uses a local LLM (phi:2.7b) to verify if the query is actually about building materials.
 
-**Key Concepts for Judges:**
-- **BM25**: Industry-standard relevance ranking (like Google Search)
-- **Material Boosting**: Give higher scores to standard titles than body text (titles more important)
-- **Query Expansion**: "33 grade" → "OPC 33 grade ordinary portland cement" (catches more matches)
-- **LLM Classification**: Optional YES/NO check - "Is this building-material related?" (never generates text)
-
-**Result:** Perfect accuracy (100% Hit Rate), zero hallucinations, super fast (<2 seconds).
+**Result:** 100% Hit Rate on test data, zero hallucinations, and ultra-fast response times.
 
 ---
 
-## 🚀 Run Locally - 3 Easy Steps
+## 🚀 Setup & Run - 4 Easy Steps
 
-### Step 1: Install Dependencies
+### 1. Install Dependencies
 ```bash
-cd BIS-Standard-RE
 pip install -r requirements.txt
 ```
+*Note: We use CPU-only versions of Torch to keep the installation lightweight.*
 
-### Step 2: Run Inference
+### 2. Build the Embedding Cache (One-Time)
+This generates the AI search index from your standards database (~30 seconds on CPU).
 ```bash
-# Fast mode (no LLM needed)
+python -c "from src.retriever import get_retriever; get_retriever()"
+```
+
+### 3. Run Inference (Batch Mode)
+```bash
 python inference.py --input public_test_set.json --output results.json
 ```
 
-### Step 3: Check Results
+### 4. Check Performance
 ```bash
-python eval_script.py --results results.json
-```
-
-**You'll see:**
-```
-Hit Rate @3:    100.00%  ✅ (Target: >80%)
-MRR @5:         0.9500   ✅ (Target: >0.7)
-Avg Latency:    1.11 sec ✅ (Target: <5s)
-```
-
----
-
-## 🧪 Optional: Add LLM Validation
-
-**Why?** Filter out non-building queries before searching (improves accuracy for messy input).
-
-```bash
-# 1. Download Ollama from https://ollama.ai (one-time, ~2GB)
-ollama pull phi
-
-# 2. Start Ollama server in separate terminal (keep running)
-ollama serve
-
-# 3. Run with validation
-python inference.py --input public_test_set.json --output results.json --validate
-
-# 4. Check results
 python eval_script.py --results results.json
 ```
 
 ---
 
-## 🎮 Web UI (For Testing)
+## 🧪 Optional: LLM Validation
 
+To prevent "garbage" queries from being processed, you can enable LLM validation:
+
+1. Download **Ollama** from [ollama.ai](https://ollama.ai).
+2. Run `ollama pull phi`.
+3. Run with validation:
+   ```bash
+   python inference.py --input public_test_set.json --output results.json --validate
+   ```
+
+---
+
+## 🎮 Web UI (Interactive Search)
+
+Test the system with a beautiful, interactive interface:
 ```bash
 streamlit run interface.py
-# Opens: http://localhost:8501
 ```
-
-Enter a product description → Click "Find Standards" → See results with scores.
-
----
-
-## 📊 How Judges Will Test
-
-```bash
-python inference.py --input hidden_private_dataset.json --output team_results.json
-python eval_script.py --results team_results.json
-```
-
-**Expected Output Format:**
-```json
-[
-  {
-    "id": "query_1",
-    "retrieved_standards": ["IS 269:2023", "IS 4031:2023", "IS 8112:1989"],
-    "latency_seconds": 0.45
-  }
-]
-```
+*   **Search**: Enter any building material description.
+*   **Configure**: Adjust recommendation count (3-5) and toggle LLM validation.
+*   **Metrics**: View real-time retrieval latency and scores.
 
 ---
 
@@ -107,46 +76,28 @@ python eval_script.py --results team_results.json
 ```
 BIS-Standard-RE/
 ├── src/
-│   ├── retriever.py         # BM25 search engine with material boosting
-│   ├── pipeline.py          # Connects all components
-│   └── llm_classifier.py    # Optional LLM validation (phi:2.7b)
+│   ├── retriever.py         # Hybrid Engine (BM25 + Semantic Embeddings)
+│   ├── pipeline.py          # Orchestrates the RAG workflow
+│   └── llm_classifier.py    # LLM validation logic
 ├── data/
-│   └── processed_data.json  # ~80 indexed BIS standards
-├── inference.py             # Main entry point (judges run this)
-├── eval_script.py           # Calculates metrics
-├── interface.py             # Streamlit web UI
-└── requirements.txt         # Python packages
+│   ├── processed_data.json  # Indexed standards database
+│   └── embeddings.npy       # Precomputed AI vectors (created in Step 2)
+├── inference.py             # Main entry point for batch testing
+├── eval_script.py           # Metrics calculation (Hit Rate, MRR)
+├── interface.py             # Streamlit Interactive UI
+└── requirements.txt         # Optimized dependency list
 ```
 
 ---
 
-## ❓ Quick FAQ
+## ✅ Why This Solution Wins
 
-**Q: Do I need to install Ollama?**  
-A: No! System works perfectly without it. Ollama is optional for query validation only.
-
-**Q: How long does it take to run?**  
-A: First query: ~1 second (loads data). Subsequent: <500ms.
-
-**Q: What if my query has nothing to do with buildings?**  
-A: Without validation → returns top 5 anyway. With validation → returns empty (safe).
-
-**Q: Will it make up fake standards?**  
-A: No. System only returns real BIS standards from the database. Zero hallucinations.
-
-**Q: Can I rebuild the index?**  
-A: Yes: `python src/preprocess.py --pdf dataset.pdf --output data/processed_data.json`
+- ✅ **Hybrid Accuracy**: Combines keyword precision with semantic intelligence.
+- ✅ **100% Local**: No internet or expensive API keys required after setup.
+- ✅ **Sub-2s Latency**: Optimized for CPU performance.
+- ✅ **No Hallucinations**: Only recommends real standards from the provided database.
+- ✅ **Transparent**: Provides relevance scores and technical metrics for every search.
 
 ---
 
-## ✅ What Makes This Work
-
-- ✅ **No external APIs** - Everything runs locally
-- ✅ **Fast** - BM25 optimized, sub-2s latency
-- ✅ **Accurate** - 100% Hit Rate on test set
-- ✅ **Safe** - Never invents standards, only matches real ones
-- ✅ **Simple** - Pure Python, easy to understand and modify
-
----
-
-**Ready to test?** Run the 3 commands above! 🚀
+**Ready to find some standards?** Start with Step 1! 🚀
