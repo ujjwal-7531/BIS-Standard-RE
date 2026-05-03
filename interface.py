@@ -212,8 +212,8 @@ with st.sidebar:
     
     top_k = st.slider(
         "📊 Number of Recommendations",
-        min_value=1,
-        max_value=10,
+        min_value=3,
+        max_value=5,
         value=5,
         help="How many standards to return"
     )
